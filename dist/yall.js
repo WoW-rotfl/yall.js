@@ -1,6 +1,10 @@
 'use strict';
 
-function yall (options) {
+// Listeners
+let intersectionListener;
+let mutationListener;
+
+function yall(options) {
   options = options || {};
 
   // Options
@@ -88,7 +92,7 @@ function yall (options) {
   }
 
   if (io in win && `${io}Entry` in win) {
-    var intersectionListener = new win[io]((entries, observer) => {
+    intersectionListener = new win[io]((entries, observer) => {
       entries.forEach(entry => {
         if (entry.intersectionRatio) {
           const element = entry.target;
@@ -121,7 +125,7 @@ function yall (options) {
     }
 
     if (observeChanges) {
-      new MutationObserver(() => {
+      mutationListener = new MutationObserver(() => {
         queryDOM().forEach(newElement => {
           if (lazyElements.indexOf(newElement) < 0) {
             lazyElements.push(newElement);
@@ -134,6 +138,30 @@ function yall (options) {
       });
     }
   }
+
 }
 
-module.exports = yall;
+function detach() {
+  if (intersectionListener) {
+    intersectionListener.disconnect();
+    intersectionListener = null;
+  }
+
+  if (mutationListener ) {
+    mutationListener.disconnect();
+    mutationListener = null;
+  }
+}
+
+function yall$1 (options) {
+  const commands = {
+    detach,
+  };
+  if (typeof options === "string" && options in commands) {
+    commands[options]();
+    return;
+  }
+  yall(options);
+}
+
+module.exports = yall$1;
